@@ -1,9 +1,13 @@
-var express = require("express");
-var router = express.Router();
-var request = require("request");
-var jsdom = require("jsdom");
+const express = require("express");
+const router = express.Router();
+const request = require("request");
+const jsdom = require("jsdom");
+const iconv = require("iconv-lite");
+const fs = require("fs");
 
-var req_url = "https://sil-philippines-languages.org/online/msm/lexicon/01.htm"
+const req_url = "https://sil-philippines-languages.org/online/msm/lexicon/01.htm"
+
+const ISO_ENCODING = "ISO-8859-1";
 
 router.get("/:page", async (req, res, next) => {
   res.send("Hello");
@@ -13,10 +17,55 @@ router.get("/:page", async (req, res, next) => {
 module.exports = router;
 
 function performParseProcess(url) {
-  request({ uri: url }, (error, response, body) => {
-    console.log(response);
+  request({ uri: url, encoding: null }, (error, response, body) => {
+
+    var utf8String = iconv.decode(Buffer.from(body), ISO_ENCODING);
+    // console.log(utf8String);
+
+    const { JSDOM } = jsdom;
+    var dom = new JSDOM(utf8String);
+    var items = dom.window.document.getElementsByClassName("lp_LexEntryPara");
+
+    let dictEntries = [];
+
+    for (var i = 0; i < items.length; i++) {
+      let item = items[i];
+      let word = item.getElementsByClassName("lp_LexEntryName")[0].textContent;
+
+      let itemPos = item.getElementsByClassName("lp_PartOfSpeech")[0];
+      let partOfSpeech = (typeof itemPos === "undefined") ? "" : itemPos.textContent;
+
+      let itemMeaning = item.getElementsByClassName("lp_Gloss_English")[0];
+      let meaning = (typeof itemMeaning === "undefined") ? "" : itemMeaning.textContent;
+
+      let entry = new Entry(word, partOfSpeech, meaning, "", "");
+      dictEntries.push(entry);
+    }
+
+    fs.writeFile("dict.json", JSON.stringify(dictEntries), function (err) {
+      if (err) throw err;
+      console.log("complete");
+    });
+    console.log(dictEntries.length);
   })
 };
+
+/**
+ * Dictionary entry model
+ * @param {*} word
+ * @param {*} partOfSpeech
+ * @param {*} meaning
+ * @param {*} note
+ * @param {*} relatedWord
+ */
+function Entry(parentId, word, partOfSpeech, meaning, note, relatedWord) {
+  this.parentId = parentId;
+  this.word = word;
+  this.partOfSpeech = partOfSpeech;
+  this.meaning = meaning;
+  this.note = note;
+  this.relatedWord = relatedWord;
+}
 
 // const express = require("express");
 // const fs = require("fs");
