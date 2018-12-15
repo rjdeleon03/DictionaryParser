@@ -69,7 +69,7 @@ function processWord(item) {
   let itemRw = item.getElementsByClassName("lp_MainCrossRef")[0];
   let relatedWord = (typeof itemRw === "undefined") ? "" : itemRw.textContent;
 
-  return new Entry(0, word, meaningSet, note, relatedWord);
+  return new Entry(word, meaningSet, note, relatedWord);
 }
 
 function processMeaningSet(item) {
@@ -89,8 +89,7 @@ function processMeaningSet(item) {
  * @param {*} note
  * @param {*} relatedWord
  */
-function Entry(parentId, word, meaningSet, note, relatedWord) {
-  this.parentId = parentId;
+function Entry(word, meaningSet, note, relatedWord) {
   this.word = word;
   this.meaningSet = [];
   this.meaningSet.push(meaningSet);
