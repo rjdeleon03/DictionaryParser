@@ -24,22 +24,25 @@ function performParseProcess(url) {
 
     const { JSDOM } = jsdom;
     var dom = new JSDOM(utf8String);
-    var items = dom.window.document.getElementsByClassName("lp_LexEntryPara");
+    var children = dom.window.document.body.children;
 
     let dictEntries = [];
+    let currentWord = null;
 
-    for (var i = 0; i < items.length; i++) {
-      let item = items[i];
-      let word = item.getElementsByClassName("lp_LexEntryName")[0].textContent;
+    for (var i = 0; i < children.length; i++) {
+      let child = children[i];
 
-      let itemPos = item.getElementsByClassName("lp_PartOfSpeech")[0];
-      let partOfSpeech = (typeof itemPos === "undefined") ? "" : itemPos.textContent;
+      if (child.className === "lp_LexEntryPara") {
+        if (currentWord !== null) dictEntries.push(currentWord);
+        currentWord = processWord(child);
 
-      let itemMeaning = item.getElementsByClassName("lp_Gloss_English")[0];
-      let meaning = (typeof itemMeaning === "undefined") ? "" : itemMeaning.textContent;
+      } else if (child.className === "lp_LexEntryPara2") {
+        currentWord.meaningSet.push(processMeaningSet(child));
+      }
 
-      let entry = new Entry(word, partOfSpeech, meaning, "", "");
-      dictEntries.push(entry);
+      if (i + 1 == children.length) {
+        dictEntries.push(currentWord);
+      }
     }
 
     fs.writeFile("dict.json", JSON.stringify(dictEntries), function (err) {
@@ -50,6 +53,34 @@ function performParseProcess(url) {
   })
 };
 
+function processWord(item) {
+  let word = item.getElementsByClassName("lp_LexEntryName")[0].textContent;
+
+  let itemPos = item.getElementsByClassName("lp_PartOfSpeech")[0];
+  let partOfSpeech = (typeof itemPos === "undefined") ? "" : itemPos.textContent;
+
+  let itemMeaning = item.getElementsByClassName("lp_Gloss_English")[0];
+  let meaning = (typeof itemMeaning === "undefined") ? "" : itemMeaning.textContent;
+  let meaningSet = new MeaningSet(partOfSpeech, meaning);
+
+  let itemNote = item.getElementsByClassName("lp_MiniHeading")[0];
+  let note = (typeof itemNote === "undefined") ? "" : itemNote.textContent;
+
+  let itemRw = item.getElementsByClassName("lp_MainCrossRef")[0];
+  let relatedWord = (typeof itemRw === "undefined") ? "" : itemRw.textContent;
+
+  return new Entry(0, word, meaningSet, note, relatedWord);
+}
+
+function processMeaningSet(item) {
+  let itemPos = item.getElementsByClassName("lp_PartOfSpeech")[0];
+  let partOfSpeech = (typeof itemPos === "undefined") ? "" : itemPos.textContent;
+
+  let itemMeaning = item.getElementsByClassName("lp_Gloss_English")[0];
+  let meaning = (typeof itemMeaning === "undefined") ? "" : itemMeaning.textContent;
+  return new MeaningSet(partOfSpeech, meaning);
+}
+
 /**
  * Dictionary entry model
  * @param {*} word
@@ -58,13 +89,23 @@ function performParseProcess(url) {
  * @param {*} note
  * @param {*} relatedWord
  */
-function Entry(parentId, word, partOfSpeech, meaning, note, relatedWord) {
+function Entry(parentId, word, meaningSet, note, relatedWord) {
   this.parentId = parentId;
   this.word = word;
-  this.partOfSpeech = partOfSpeech;
-  this.meaning = meaning;
+  this.meaningSet = [];
+  this.meaningSet.push(meaningSet);
   this.note = note;
   this.relatedWord = relatedWord;
+}
+
+/**
+ * Meaning set model
+ * @param {*} partOfSpeech 
+ * @param {*} meaning 
+ */
+function MeaningSet(partOfSpeech, meaning) {
+  this.partOfSpeech = partOfSpeech;
+  this.meaning = meaning;
 }
 
 // const express = require("express");
