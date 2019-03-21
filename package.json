@@ -10,8 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.18.3",
-    "express": "^4.16.3",
-    "html-to-json": "^0.6.0",
+    "express": "^4.16.4",
+    "fs": "0.0.1-security",
+    "iconv-lite": "^0.4.24",
+    "jsdom": "^13.0.0",
     "parse5": "^5.1.0"
   }
 }
