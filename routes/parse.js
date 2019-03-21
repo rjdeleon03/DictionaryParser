@@ -18,8 +18,6 @@ router.get("/:page", async (req, res, next) => {
   performParseProcess(URL_TEMPLATE + getFormattedIdx(index) + URL_EXT);
 });
 
-let miniHeadingSet = new Set();
-
 module.exports = router;
 
 function getFormattedIdx(number) {
@@ -28,7 +26,7 @@ function getFormattedIdx(number) {
 
 function performParseProcess(url) {
   console.log("Total: " + dictEntries.length);
-  if (index > 26) {
+  if (index > 20) {
     fs.writeFile("dict.json", JSON.stringify(dictEntries), function(err) {
       if (err) throw err;
       console.log("--------- complete ---------");
@@ -111,8 +109,7 @@ function Entry(word, meaningSet, noteSet) {
   this.word = word;
   this.meaningSet = [];
   this.meaningSet.push(meaningSet);
-  this.noteSet = [];
-  this.noteSet.push(noteSet);
+  this.noteSet = noteSet;
 }
 
 /**
