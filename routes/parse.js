@@ -27,14 +27,11 @@ function getFormattedIdx(number) {
 }
 
 function performParseProcess(url) {
-  // console.log(dictEntries.length);
+  console.log("Total: " + dictEntries.length);
   if (index > 26) {
     fs.writeFile("dict.json", JSON.stringify(dictEntries), function(err) {
       if (err) throw err;
       console.log("--------- complete ---------");
-      miniHeadingSet.forEach(item => {
-        // console.log(item);
-      });
     });
     return;
   }
@@ -80,25 +77,7 @@ function processWord(item) {
     typeof itemMeaning === "undefined" ? "" : itemMeaning.textContent;
   let meaningSet = new MeaningSet(partOfSpeech, meaning);
 
-  let itemNoteItems = Array.from(item.getElementsByClassName("lp_MiniHeading"));
-  itemNoteItems.forEach(element => {
-    miniHeadingSet.add(element.textContent);
-    console.log(element.textContent);
-  });
-
-  let itemNote = item.getElementsByClassName("lp_MiniHeading")[0];
-  let note = typeof itemNote === "undefined" ? "" : itemNote.textContent;
-
-  let itemRw = item.getElementsByClassName("lp_MainCrossRef")[0];
-  let subItemRw = item.getElementsByClassName("lp_CrossRef")[0];
-  let relatedWord =
-    typeof itemRw === "undefined"
-      ? typeof subItemRw === "undefined"
-        ? ""
-        : subItemRw.textContent
-      : itemRw.textContent;
-
-  return new Entry(word, meaningSet, note, relatedWord);
+  return new Entry(word, meaningSet, processNoteSet(item));
 }
 
 function processMeaningSet(item) {
@@ -111,23 +90,29 @@ function processMeaningSet(item) {
   return new MeaningSet(partOfSpeech, meaning);
 }
 
+function processNoteSet(item) {
+  let noteSetArray = [];
+  let itemHeadings = Array.from(item.getElementsByClassName("lp_MiniHeading"));
+  itemHeadings.forEach(element => {
+    noteSetArray.push(
+      new NoteSet(element.textContent, element.nextSibling.textContent)
+    );
+  });
+  return noteSetArray;
+}
+
 /**
  * Dictionary entry model
  * @param {*} word
- * @param {*} partOfSpeech
- * @param {*} meaning
- * @param {*} note
- * @param {*} relatedWord
+ * @param {*} meaningSet
+ * @param {*} noteSet
  */
-function Entry(word, meaningSet, note, relatedWord) {
+function Entry(word, meaningSet, noteSet) {
   this.word = word;
   this.meaningSet = [];
   this.meaningSet.push(meaningSet);
-  this.note = note;
-  this.relatedWord = relatedWord;
-  // this.note = [];
-  // this.noteSet.push(noteSet);
-  // this.relatedWord = relatedWord;
+  this.noteSet = [];
+  this.noteSet.push(noteSet);
 }
 
 /**
@@ -144,10 +129,8 @@ function MeaningSet(partOfSpeech, meaning) {
  * Note set model
  * @param {*} noteHeader
  * @param {*} note
- * @param {*} relatedWord
  */
-function NoteSet(noteHeader, note, relatedWord) {
+function NoteSet(noteHeader, note) {
   this.noteHeader = noteHeader;
   this.note = note;
-  this.relatedWord = relatedWord;
 }
