@@ -75,7 +75,12 @@ function processWord(item) {
     typeof itemMeaning === "undefined" ? "" : itemMeaning.textContent;
   let meaningSet = new MeaningSet(partOfSpeech, meaning);
 
-  return new Entry(word, meaningSet, processNoteSet(item));
+  return new Entry(
+    dictEntries.length + 1,
+    word,
+    meaningSet,
+    processNoteSet(item)
+  );
 }
 
 function processMeaningSet(item) {
@@ -101,11 +106,13 @@ function processNoteSet(item) {
 
 /**
  * Dictionary entry model
+ * @param {*} id
  * @param {*} word
  * @param {*} meaningSet
  * @param {*} noteSet
  */
-function Entry(word, meaningSet, noteSet) {
+function Entry(id, word, meaningSet, noteSet) {
+  this.id = id;
   this.word = word;
   this.meaningSet = [];
   this.meaningSet.push(meaningSet);
