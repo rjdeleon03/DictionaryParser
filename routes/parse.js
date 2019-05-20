@@ -114,6 +114,9 @@ function processNoteSet(item) {
 function Entry(id, word, meaningSet, noteSet) {
   this.id = id;
   this.word = word;
+  this.normalizedWord = word.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, '');
   this.meaningSet = [];
   this.meaningSet.push(meaningSet);
   this.noteSet = noteSet;
